@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Builder</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Portfolio Builder <span style="font-size: 12px; color:var(--primary); background:var(--primary-soft); padding:2px 8px; border-radius:10px;">v2.0</span></h1>
+            <div class="header-actions">
+                <button onclick="saveDraft()" class="btn-secondary"><i class="fas fa-save"></i> Save Draft</button>
+            </div>
+        </header>
+
+        <div class="main-grid">
+            <div class="editor-panel">
+                <div class="panel-header">
+                    <h2>Document Sections</h2>
+                    <button onclick="addSection()" class="btn-primary">+ Add Section</button>
+                </div>
+                <div id="sectionsContainer" class="sections-container"></div>
+            </div>
+
+            <div class="control-panel">
+                
+                <div class="tabs-header">
+                    <button class="tab-btn active" onclick="switchTab('tab-design')">Design</button>
+                    <button class="tab-btn" onclick="switchTab('tab-data')">Save / Load</button>
+                    <button class="tab-btn" onclick="switchTab('tab-ai')">AI Tools</button>
+                </div>
+                <div id="tab-design" class="tab-content active">
+                    <div class="panel-section">
+                        <h3>Template</h3>
+                        <div class="control-group">
+                            <label>Choose Template</label>
+                            <select id="templateSelect">
+                                <option value="nctu">NCTU Style (Colored Sidebar)</option>
+                                
+                                <option value="academic">Academic</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="panel-section">
+                        <h3>Formatting</h3>
+                        <div class="control-group">
+                            <label>English Font</label>
+                            <select id="englishFont">
+                                <option value="'Times New Roman', serif" selected>Times New Roman</option>
+                                <option value="Roboto, sans-serif">Roboto</option>
+                                <option value="Arial, sans-serif">Arial</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label>Chinese Font</label>
+                            <select id="chineseFont">
+                                <option value="'DFKai-SB', '標楷體', serif" selected>標楷體 (DFKai-SB)</option>
+                                <option value="'Microsoft JhengHei', '微軟正黑體'">微軟正黑體</option>
+                                <option value="'Noto Sans TC', sans-serif">Noto Sans TC</option>
+                            </select>
+                        </div>
+                        <div class="control-row">
+                            <div class="control-group">
+                                <label>Size</label>
+                                <input type="number" id="bodySize" value="14" min="12" max="18">
+                            </div>
+                            <div class="control-group">
+                                <label>Line Height</label>
+                                <input type="number" id="lineHeight" value="1.6" min="1.2" max="2.0" step="0.1">
+                            </div>
+                        </div>
+                        <div class="control-group" style="margin-top:10px;">
+                            <input type="checkbox" id="includeToc" style="width:auto;">
+                            <label for="includeToc" style="display:inline;">Generate Table of Contents</label>
+                        </div>
+                        
+                    </div>
+
+                    <div class="panel-section">
+                        <h3>Actions</h3>
+                        <button onclick="generateDocument()" class="btn-generate">✨ Generate Full Preview</button>
+                        
+                        <div class="progress-container" id="progressContainer" style="display: none;">
+                            <div class="progress-bar"><div id="progressBar" class="progress-fill"></div></div>
+                            <p id="progressText" class="progress-text">Processing...</p>
+                        </div>
+                        
+                        <div id="exportSection" style="display: none;">
+                            <div class="control-group">
+                                <label>Filename</label>
+                                <input type="text" id="exportFilename" placeholder="my-portfolio">
+                            </div>
+                            <div class="export-buttons">
+                                <button onclick="exportHTML()" class="btn-export">💾 Download HTML</button>
+                                <button onclick="printDocument()" class="btn-export" style="background:#2c3e50;">🖨️ Print to PDF</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-data" class="tab-content">
+                    <div class="panel-section">
+                        <h3>Save Draft</h3>
+                        <p style="font-size:12px; color:#666; margin-bottom:10px;">Download your current progress as a JSON file to edit later.</p>
+                        <button onclick="saveDraft()" class="btn-primary" style="width:100%">Download .json file</button>
+                    </div>
+                    
+                    <div class="panel-section">
+                        <h3>Load Draft</h3>
+                        <p style="font-size:12px; color:#666; margin-bottom:10px;">Upload a previously saved JSON file.</p>
+                        <label class="file-upload-btn">
+                            📂 Select JSON File
+                            <input type="file" accept=".json" onchange="loadDraft(this)">
+                        </label>
+                    </div>
+                </div>
+                <div id="tab-ai" class="tab-content">
+                    <div class="panel-section">
+                        <h3>🤖 Gemini API Setup</h3>
+                        <p style="font-size:12px; color:#666; margin-bottom:10px;">
+                            Get your free API key from <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--primary);">Google AI Studio</a>
+                        </p>
+                        <div class="control-group">
+                            <label>API Key</label>
+                            <input type="password" id="geminiApiKey" placeholder="Enter your Gemini API key">
+                        </div>
+                        <div style="display:flex; gap:8px; margin-top:10px;">
+                            <button onclick="saveApiKey()" class="btn-primary" style="flex:1;">💾 Save Key</button>
+                            <button onclick="clearApiKey()" class="btn-secondary" style="flex:1;">🗑️ Clear</button>
+                        </div>
+                        <!-- API key status & inline confirm -->
+                        <div id="apiKeyStatus" class="api-status" style="display:none; margin-top:10px; align-items:center; gap:8px;">
+                            <span style="font-weight:600; color:#059669;">✓ API key saved</span>
+                        </div>
+                        <div id="apiKeyConfirm" class="api-confirm" style="display:none; margin-top:10px; gap:8px; align-items:center;">
+                            <span style="font-size:13px; color:#374151;">Are you sure you want to clear the saved API key?</span>
+                            <button class="btn-small" onclick="confirmClearApiKey()">Yes</button>
+                            <button class="btn-small" onclick="cancelClearApiKey()">Cancel</button>
+                        </div>
+                    </div>
+
+                    <div class="panel-section">
+                        <h3>✨ How to Use</h3>
+                        <ol style="font-size:12px; color:#666; line-height:1.6; padding-left:20px;">
+                            <li>Save your Gemini API key above</li>
+                            <li>Write content in any text block</li>
+                            <li>Click "✨ Rephrase by Gemini" below the text box</li>
+                            <li>Accept or decline the AI suggestion</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Rephrase Floating Dialog -->
+        <div id="rephraseDialog" class="rephrase-dialog">
+            <button onclick="closeRephraseDialog()" class="dialog-close">×</button>
+            
+            <div id="dialogLoading" class="dialog-loading">
+                <div class="loading-spinner-small"></div>
+                <p>AI rephrasing...</p>
+            </div>
+
+            <div id="dialogResult" style="display:none;">
+                <div class="dialog-header">✨ Rephrased</div>
+                <div id="dialogRephrased" class="dialog-text"></div>
+                
+                <div class="dialog-actions">
+                    <button onclick="declineRephrase()" class="btn-dialog-decline">Decline</button>
+                    <button onclick="acceptRephrase()" class="btn-dialog-accept">✓ Accept</button>
+                </div>
+            </div>
+        </div>
+        <div id="previewPanel" class="preview-panel">
+            <div class="preview-header">
+                <h3>📋 Preview</h3>
+                <div class="preview-actions">
+                    <button id="aiPolishBtn" onclick="openHtmlFixDialog()" class="btn-primary" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+                        ✨ AI Polish Page
+                    </button>
+                    <button onclick="printDocument()" class="btn-secondary">🖨️ Print</button>
+                    <button onclick="closePreview()" class="btn-secondary">Close</button>
+                </div>
+            </div>
+            <div class="preview-content">
+                <iframe id="visualPreviewFrame" class="visual-preview-frame"></iframe>
+            </div>
+        </div>
+    </div>
+    
+    
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <div id="toastContainer" class="toast-container"></div>
+        
+    <div id="htmlFixDialog" class="html-fix-dialog" style="display:none;">
+        <div style="position: absolute; top: 10px; right: 10px; z-index: 100;">
+            <button onclick="toggleMinimizeDialog()" class="dialog-control" title="Minimize">_</button>
+            <button onclick="closeHtmlFixDialog()" class="dialog-control" title="Close">×</button>
+        </div>
+        <div class="dialog-header">
+            <h3>✨ AI Document Polish</h3>
+            <p style="font-size:12px; color:#666; font-weight:normal;">
+                This fixes grammar and tone for the final print. <br>
+                <strong>Note:</strong> Changes here are for printing only and won't save to your JSON file.
+            </p>
+        </div>
+        <div id="htmlFixInput" class="dialog-body-padded">
+            <label style="font-size:14px; font-weight:600;">Instruction for AI:</label>
+            <textarea id="htmlFixInstruction" rows="2" style="width:100%; margin-top:5px; padding:8px; border:1px solid #ddd; border-radius:4px;">Fix grammar, improve sentence flow, and ensure professional tone.</textarea>
+            <button onclick="processHtmlFix()" class="btn-primary" style="margin-top:10px; width:100%;">
+                🚀 Generate Fix
+            </button>
+            
+            <div id="htmlFixLoading" style="display:none; text-align:center; margin-top:15px;">
+                <div class="loading-spinner-small"></div>
+                <p>AI is reading and polishing your document...</p>
+            </div>
+        </div>
+
+        <div id="htmlFixCompare" style="display:none; flex:1; flex-direction:column; overflow:hidden;">
+            <div class="compare-container">
+                <div class="compare-pane">
+                    <div class="pane-label">Original</div>
+                    <iframe id="frameOriginal"></iframe>
+                </div>
+                <div class="compare-pane">
+                    <div class="pane-label" style="background:#e0e7ff; color:#4338ca;">✨ AI Fixed</div>
+                    <iframe id="frameFixed"></iframe>
+                </div>
+            </div>
+            <div class="dialog-actions" style="border-top:1px solid #eee; padding:15px; background:white;">
+                <button onclick="resetHtmlFix()" class="btn-secondary">Try Again</button>
+                <div style="flex:1;"></div>
+                <button onclick="closeHtmlFixDialog()" class="btn-dialog-decline">Cancel</button>
+                <button onclick="acceptHtmlFix()" class="btn-dialog-accept">✓ Apply Fix</button>
+            </div>
+        </div>
+    </div>
+
+
+</body>
+</html>
