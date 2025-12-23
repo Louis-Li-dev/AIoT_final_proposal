@@ -1,0 +1,5 @@
+Flask==3.0.0
+google-generativeai==0.8.3
+Werkzeug==3.0.1
+# Optional (install if you deploy with Gunicorn):
+# gunicorn==20.1.0
